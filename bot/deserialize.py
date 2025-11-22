@@ -1,3 +1,6 @@
+
+
+
 class LessonInnerData(BaseModel):
     number: int
     subject: str
@@ -37,10 +40,8 @@ class DaySchedule(BaseModel):
 ScheduleAdapter = TypeAdapter(Dict[str, Dict[str, List[DaySchedule]]])
 
 def parse_journal(json_data) -> Journal:
-    # ИСПРАВЛЕНО: ScheduleLog -> Journal
     journal = Journal.model_validate(json_data) 
     return journal
 
 def parse_schedule(json_data) -> Dict[str, Dict[str, List[DaySchedule]]]:
-    # ИСПРАВЛЕНО: Добавлен return
     return ScheduleAdapter.validate_python(json_data)
