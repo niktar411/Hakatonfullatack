@@ -1,3 +1,4 @@
+// index.js
 // Время пар
 const lessonTimes = {
     1: "8:30 - 9:50",
@@ -43,6 +44,9 @@ let currentEditCell = null;
 let currentEditDay = null;
 let currentEditLesson = null;
 
+// Базовый URL API
+const API_BASE = 'http://localhost:3000/api';
+
 // Функция для проверки режима администратора
 function isAdminMode() {
     return localStorage.getItem('userRole') === 'admin';
@@ -84,13 +88,53 @@ function getMergedSchedule(scheduleData) {
     return mergedData;
 }
 
-// Функция для сохранения пользовательского расписания
+// Функция для сохранения пользовательского расписания (fallback)
 function saveCustomSchedule() {
     localStorage.setItem('customScheduleData', JSON.stringify(customScheduleData));
 }
 
 // Функция для добавления/обновления пары
-function saveLesson(day, lessonNumber, teacher, subject, room, lessonType) {
+async function saveLesson(day, lessonNumber, teacher, subject, room, lessonType) {
+    try {
+        const user = localStorage.getItem('userRole') === 'admin' ? 'admin' : 'student';
+        
+        const response = await fetch(`${API_BASE}/schedule/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                day: day,
+                lessonNumber: lessonNumber,
+                teacher: teacher,
+                subject: subject,
+                room: room,
+                lessonType: lessonType,
+                group: currentGroup,
+                building: currentBuilding,
+                user: user
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Пара успешно сохранена', 'success');
+            loadScheduleFromJSON();
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        showNotification('Ошибка сохранения: ' + error.message, 'error');
+        
+        // Fallback: сохраняем в localStorage
+        saveToLocalStorage(day, lessonNumber, teacher, subject, room, lessonType);
+    }
+}
+
+// Fallback функция для сохранения в localStorage
+function saveToLocalStorage(day, lessonNumber, teacher, subject, room, lessonType) {
     // Инициализируем структуру данных если её нет
     if (!customScheduleData[currentGroup]) customScheduleData[currentGroup] = {};
     if (!customScheduleData[currentGroup][currentBuilding]) customScheduleData[currentGroup][currentBuilding] = [];
@@ -124,11 +168,48 @@ function saveLesson(day, lessonNumber, teacher, subject, room, lessonType) {
     // Сохраняем в localStorage
     saveCustomSchedule();
     
-    showNotification('Пара успешно сохранена', 'success');
+    showNotification('Пара успешно сохранена (локально)', 'success');
+    loadScheduleFromJSON();
 }
 
 // Функция для удаления пары
-function removeLesson(day, lessonNumber) {
+async function removeLesson(day, lessonNumber) {
+    try {
+        const user = localStorage.getItem('userRole') === 'admin' ? 'admin' : 'student';
+        
+        const response = await fetch(`${API_BASE}/schedule/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                day: day,
+                lessonNumber: lessonNumber,
+                group: currentGroup,
+                building: currentBuilding,
+                user: user
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Пара успешно удалена', 'success');
+            loadScheduleFromJSON();
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка удаления:', error);
+        showNotification('Ошибка удаления: ' + error.message, 'error');
+        
+        // Fallback: удаляем из localStorage
+        removeFromLocalStorage(day, lessonNumber);
+    }
+}
+
+// Fallback функция для удаления из localStorage
+function removeFromLocalStorage(day, lessonNumber) {
     if (customScheduleData[currentGroup] && customScheduleData[currentGroup][currentBuilding]) {
         const dayData = customScheduleData[currentGroup][currentBuilding].find(d => d.day === day);
         
@@ -142,7 +223,8 @@ function removeLesson(day, lessonNumber) {
             
             // Сохраняем изменения
             saveCustomSchedule();
-            showNotification('Пара успешно удалена', 'success');
+            showNotification('Пара успешно удалена (локально)', 'success');
+            loadScheduleFromJSON();
         }
     }
 }
@@ -165,7 +247,7 @@ function getLessonForEditing(day, lessonNumber) {
 // Функция для загрузки расписания из JSON
 async function loadScheduleFromJSON() {
     try {
-        const response = await fetch('schedule.json');
+        const response = await fetch(`${API_BASE}/schedule`);
         const scheduleData = await response.json();
         const mergedData = getMergedSchedule(scheduleData);
         renderSchedule(mergedData);
@@ -475,8 +557,126 @@ function showConfirmation(message, callback) {
 function removeLessonWithConfirmation(day, lessonNumber) {
     showConfirmation('Вы уверены, что хотите удалить эту пару?', function() {
         removeLesson(day, lessonNumber);
-        loadScheduleFromJSON();
     });
+}
+
+// Функция для просмотра журнала (для администраторов)
+async function viewJournal() {
+    if (isAdminMode()) {
+        try {
+            const response = await fetch(`${API_BASE}/journal`);
+            const journal = await response.json();
+            showJournalModal(journal);
+        } catch (error) {
+            console.error('Ошибка загрузки журнала:', error);
+            showNotification('Ошибка загрузки журнала', 'error');
+        }
+    }
+}
+
+// Функция для отображения модального окна с журналом
+function showJournalModal(journal) {
+    // Создаем модальное окно для журнала
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    
+    let journalHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <h2>Журнал изменений</h2>
+            <div style="margin-bottom: 15px;">
+                <button class="btn" onclick="clearJournal()" style="background-color: #dc3545;">Очистить журнал</button>
+            </div>
+            <div class="journal-entries">
+    `;
+    
+    if (journal.entries && journal.entries.length === 0) {
+        journalHTML += '<p>Журнал пуст</p>';
+    } else {
+        journal.entries.forEach(entry => {
+            journalHTML += `
+                <div class="journal-entry" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <strong>${new Date(entry.timestamp).toLocaleString('ru-RU')}</strong>
+                        <span style="color: ${entry.user === 'admin' ? '#dc3545' : '#0078cf'}">${entry.user}</span>
+                    </div>
+                    <div><strong>Действие:</strong> ${getActionText(entry.action)}</div>
+                    <div><strong>Группа:</strong> ${entry.details.group}</div>
+                    <div><strong>Корпус:</strong> ${entry.details.building}</div>
+                    <div><strong>День:</strong> ${entry.details.day}</div>
+                    <div><strong>Пара:</strong> ${entry.details.lessonNumber}</div>
+                </div>
+            `;
+        });
+    }
+    
+    journalHTML += `
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn cancel-btn" onclick="this.closest('.modal').remove()">Закрыть</button>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = journalHTML;
+    document.body.appendChild(modal);
+    
+    // Закрытие при клике вне модального окна
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+function getActionText(action) {
+    const actions = {
+        'ADD_LESSON': 'Добавление пары',
+        'UPDATE_LESSON': 'Изменение пары', 
+        'REMOVE_LESSON': 'Удаление пары'
+    };
+    return actions[action] || action;
+}
+
+// Функция для очистки журнала
+async function clearJournal() {
+    if (confirm('Вы уверены, что хотите очистить журнал?')) {
+        try {
+            const response = await fetch(`${API_BASE}/journal`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification('Журнал очищен', 'success');
+                document.querySelector('.modal').remove();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Ошибка очистки журнала:', error);
+            showNotification('Ошибка очистки журнала', 'error');
+        }
+    }
+}
+
+// Добавляем кнопку для просмотра журнала в интерфейс администратора
+function addJournalButton() {
+    if (isAdminMode()) {
+        const header = document.querySelector('header');
+        const existingJournalBtn = document.querySelector('.journal-btn');
+        
+        if (!existingJournalBtn) {
+            const journalBtn = document.createElement('button');
+            journalBtn.className = 'btn journal-btn';
+            journalBtn.style.backgroundColor = '#17a2b8';
+            journalBtn.textContent = 'Журнал';
+            journalBtn.addEventListener('click', viewJournal);
+            
+            header.insertBefore(journalBtn, document.getElementById('registerBtn'));
+        }
+    }
 }
 
 // Инициализация функционала администратора
@@ -535,9 +735,8 @@ function initializeAdminFeatures() {
         // Сохраняем пару
         saveLesson(currentEditDay, currentEditLesson, teacher, subject, room, lessonType);
         
-        // Закрываем модальное окно и обновляем расписание
+        // Закрываем модальное окно
         lessonModal.style.display = 'none';
-        loadScheduleFromJSON();
     });
 }
 
@@ -695,10 +894,19 @@ function initializeWeekNavigation() {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    initializeUserGroup(); // Добавляем инициализацию группы пользователя
+    initializeUserGroup();
     initializeDropdowns();
     initializeWeekNavigation();
     updateWeekDisplay();
     loadScheduleFromJSON();
     initializeAdminFeatures();
+    
+    // Добавляем кнопку журнала после инициализации
+    setTimeout(() => {
+        addJournalButton();
+    }, 100);
 });
+
+// Делаем функции глобальными для использования в HTML
+window.clearJournal = clearJournal;
+window.viewJournal = viewJournal;
