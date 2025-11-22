@@ -5,7 +5,7 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3020;
 const JOURNAL_FILE = 'journal.json';
 
 // Middleware

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписание пар</title>
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
     <div class="container">
@@ -13,36 +14,34 @@
             <button class="btn profile-btn" id="registerBtn">Профиль</button>
         </header>
         
-        <div class="schedule-container">
-            <div class="schedule-header">
-                <!-- Перемещенные элементы управления -->
-                <div class="controls">
-                    <div class="dropdown" id="buildingDropdown">
-                        <button class="btn" id="buildingBtn">Корпус</button>
-                        <div class="dropdown-content">
-                            <a href="#" data-value="a">Корпус А</a>
-                            <a href="#" data-value="y">Корпус У</a>
-                            <a href="#" data-value="g">Корпус Г</a>
-                            <a href="#" data-value="k">Корпус К</a>
-                        </div>
-                    </div>
-                    
-                    <div class="dropdown" id="groupDropdown">
-                        <button class="btn" id="groupBtn">Группа</button>
-                        <div class="dropdown-content">
-                            <!-- Список будет заполняться через JavaScript -->
-                        </div>
+        <div class="controls-header">
+            <div class="controls">
+                <div class="dropdown" id="buildingDropdown">
+                    <button class="btn" id="buildingBtn">Корпус</button>
+                    <div class="dropdown-content">
+                        <a href="#" data-value="a">Корпус А</a>
+                        <a href="#" data-value="y">Корпус У</a>
+                        <a href="#" data-value="g">Корпус Г</a>
+                        <a href="#" data-value="k">Корпус К</a>
                     </div>
                 </div>
-                <!-- Конец перемещенных элементов -->
                 
-                <div class="week-navigation">
-                    <button class="week-btn">←</button>
-                    <span id="weekRange">Неделя 12.03 - 18.03</span>
-                    <button class="week-btn">→</button>
+                <div class="dropdown" id="groupDropdown">
+                    <button class="btn" id="groupBtn">Группа</button>
+                    <div class="dropdown-content">
+                        <!-- Список будет заполняться через JavaScript -->
+                    </div>
                 </div>
             </div>
             
+            <div class="week-navigation">
+                <button class="week-btn">←</button>
+                <span id="weekRange">Неделя 12.03 - 18.03</span>
+                <button class="week-btn">→</button>
+            </div>
+        </div>
+        
+        <div class="schedule-container">
             <table class="schedule">
                 <thead>
                     <tr>
@@ -115,6 +114,20 @@
     <div id="lessonModal" class="modal">
         <div class="modal-content">
             <h2 id="lessonModalTitle">Добавить пару</h2>
+            <div class="lesson-info-header">
+                <div class="lesson-info-item">
+                    <strong>День:</strong> <span id="lessonDayInfo">Понедельник</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Дата:</strong> <span id="lessonDateInfo">12.03.2024</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Пара:</strong> <span id="lessonNumberInfo">1</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Время:</strong> <span id="lessonTimeInfo">8:30 - 9:50</span>
+                </div>
+            </div>
             <form id="lessonForm">
                 <div class="form-group">
                     <label for="teacherSearch">Поиск преподавателя:</label>
@@ -140,7 +153,6 @@
                     <label for="room">Аудитория:</label>
                     <input type="text" id="room" name="room" placeholder="Номер аудитории">
                 </div>
-                <!-- Добавьте этот блок в модальное окно добавления/редактирования пары после поля room -->
                 <div class="form-group">
                     <label for="lessonType">Тип занятия:</label>
                     <select id="lessonType" name="lessonType">

@@ -15,15 +15,31 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+    min-width: 1200px;
 }
 
 header {
+    position: sticky;
+    top: 0;
+    background-color: #f5f7fa;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 0;
     border-bottom: 1px solid #ddd;
     margin-bottom: 20px;
+}
+
+header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -10px;
+    width: 10px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
 }
 
 .controls {
@@ -89,6 +105,18 @@ header {
     display: block;
 }
 
+.controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    position: sticky;
+    top: 80px;
+    background-color: #f5f7fa;
+    z-index: 90;
+    padding: 10px 0;
+}
+
 .schedule-container {
     background-color: white;
     border-radius: 10px;
@@ -96,15 +124,31 @@ header {
     padding: 20px;
     margin-top: 20px;
     overflow-x: auto;
+    min-width: 1200px;
 }
 
 .schedule-header {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 50;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
+}
+
+.schedule-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -10px;
+    width: 10px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
 }
 
 .week-navigation {
@@ -129,7 +173,8 @@ header {
 }
 
 .schedule {
-    width: 100%;
+    width: auto;
+    min-width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
 }
@@ -138,6 +183,9 @@ header {
     padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid #eee;
+    min-width: 150px;
+    max-width: 200px;
+    border: #818a91 1px solid;
 }
 
 .schedule th {
@@ -146,13 +194,22 @@ header {
     text-align: center;
 }
 
+.schedule th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 20;
+}
+
 .schedule tr:hover {
     background-color: #f8f9fa;
 }
 
 .time-column {
-    width: 110px;
+    position: sticky;
+    left: 0;
     background-color: #f8f9fa;
+    z-index: 10;
+    width: 110px;
     font-weight: 600;
     text-align: center;
 }
@@ -170,26 +227,6 @@ header {
     margin-bottom: 5px;
 }
 
-.subject-cell {
-    font-weight: 500;
-    margin-bottom: 5px;
-    font-size: 0.95em;
-}
-
-.teacher-cell {
-    color: #6c757d;
-    font-size: 0.85em;
-}
-
-.room-cell {
-    color: #6c757d;
-    font-size: 0.85em;
-}
-
-.current-day {
-    background-color: #e8f4fd;
-}
-
 .day-header {
     text-align: center;
     padding: 10px;
@@ -202,15 +239,111 @@ header {
     min-height: 100px;
 }
 
-th {
-    border: #818a91 1px solid !important;
-}
-td {
-    border: #818a91 1px solid !important;
-}
-
 .empty-cell {
     background-color: #fafafa;
+}
+
+.current-day {
+    background-color: #e8f4fd;
+}
+
+.lesson-cell {
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.lesson-cell:hover {
+    background-color: #f0f8ff;
+}
+
+.lesson-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    height: 100%;
+}
+
+.room-number {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #000;
+    min-width: 40px;
+    text-align: center;
+    padding-top: 5px;
+}
+
+.lesson-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.subject-cell {
+    font-weight: 500;
+    margin-bottom: 3px;
+    font-size: 0.95em;
+    line-height: 1.2;
+}
+
+.teacher-cell {
+    color: #6c757d;
+    font-size: 0.85em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.lesson-type {
+    color: #6c757d;
+    font-size: 0.8em;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+.admin-controls {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: none;
+}
+
+.lesson-cell:hover .admin-controls {
+    display: block;
+}
+
+.edit-btn, .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.edit-btn {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.remove-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.add-lesson-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 5px;
+    width: 100%;
+}
+
+.add-lesson-btn:hover {
+    background-color: #218838;
 }
 
 .modal {
@@ -304,13 +437,6 @@ td {
     border-color: #0078cf;
 }
 
-.submit-btn {
-    width: 100%;
-    margin-top: 10px;
-    padding: 12px;
-    font-size: 16px;
-}
-
 #studentFields {
     transition: all 0.3s ease;
 }
@@ -333,6 +459,9 @@ td {
 .submit-btn {
     flex: 2;
     margin-top: 0;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
 }
 
 .delete-btn {
@@ -342,63 +471,6 @@ td {
 
 .delete-btn:hover {
     background-color: #c82333;
-}
-
-.add-lesson-btn {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-top: 5px;
-    width: 100%;
-}
-
-.add-lesson-btn:hover {
-    background-color: #218838;
-}
-
-.lesson-cell {
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.lesson-cell:hover {
-    background-color: #f0f8ff;
-}
-
-.admin-controls {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: none;
-}
-
-.lesson-cell:hover .admin-controls {
-    display: block;
-}
-
-.edit-btn, .remove-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    margin-left: 5px;
-    padding: 2px 5px;
-    border-radius: 3px;
-}
-
-.edit-btn {
-    background-color: #ffc107;
-    color: #000;
-}
-
-.remove-btn {
-    background-color: #dc3545;
-    color: white;
 }
 
 .search-results {
@@ -430,49 +502,83 @@ td {
     margin-top: 2px;
 }
 
-/* Добавьте эти стили в конец файла */
+.schedule-container::-webkit-scrollbar {
+    height: 8px;
+}
 
-/* Стили для нового расположения элементов пары */
-.lesson-content {
+.schedule-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.schedule-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.schedule-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.lesson-info-header {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 5px 6px;
+    background-color: #6c757d;
+    border-radius: 6px;
+    color: white;
+}
+
+.lesson-info-item {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    height: 100%;
-}
-
-.room-number {
-    font-size: 1.4em;
-    font-weight: bold;
-    color: #000;
-    min-width: 40px;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    padding-top: 5px;
 }
 
-.lesson-details {
-    flex: 1;
-    min-width: 0;
-}
-
-.lesson-type {
-    color: #6c757d;
-    font-size: 0.8em;
-    margin-top: 3px;
-    font-style: italic;
-}
-
-.subject-cell {
-    font-weight: 500;
-    margin-bottom: 3px;
-    font-size: 0.95em;
-    line-height: 1.2;
-}
-
-.teacher-cell {
-    color: #6c757d;
-    font-size: 0.85em;
-    line-height: 1.2;
+.info-label {
+    font-size: 0.75em;
+    opacity: 0.8;
     margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Остальные существующие стили остаются без изменений */
+.info-value {
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+#lessonDayInfo::first-letter {
+    text-transform: uppercase;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 500px;
+    animation: modalSlideIn 0.3s ease-out;
+    position: relative;
+}
+
+.body-no-scroll {
+    overflow: hidden;
+}
