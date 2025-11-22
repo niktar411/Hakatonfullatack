@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание пар</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Расписание пар</h1>
+            <button class="btn profile-btn">Профиль</button>
+        </header>
+        
+        <div class="schedule-container">
+            <div class="schedule-header">
+                <!-- Перемещенные элементы управления -->
+                <div class="controls">
+                    <div class="dropdown" id="buildingDropdown">
+                        <button class="btn" id="buildingBtn">Корпус</button>
+                        <div class="dropdown-content">
+                            <a href="#" data-value="a">Корпус А</a>
+                            <a href="#" data-value="y">Корпус У</a>
+                            <a href="#" data-value="g">Корпус Г</a>
+                            <a href="#" data-value="k">Корпус К</a>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown" id="groupDropdown">
+                        <button class="btn" id="groupBtn">Группа</button>
+                        <div class="dropdown-content">
+                            <!-- Список будет заполняться через JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Конец перемещенных элементов -->
+                
+                <div class="week-navigation">
+                    <button class="week-btn">←</button>
+                    <span id="weekRange">Неделя 12.03 - 18.03</span>
+                    <button class="week-btn">→</button>
+                </div>
+            </div>
+            
+            <table class="schedule">
+                <thead>
+                    <tr>
+                        <th class="time-column"></th>
+                        <th class="day-header">Понедельник</th>
+                        <th class="day-header">Вторник</th>
+                        <th class="day-header">Среда</th>
+                        <th class="day-header">Четверг</th>
+                        <th class="day-header">Пятница</th>
+                        <th class="day-header">Суббота</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <!-- Расписание будет загружено через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
