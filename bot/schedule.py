@@ -11,9 +11,14 @@ async def check_and_send_notifications(bot: Bot):
         logging.info("journal is None")
     else:
         for entry in journal.entries:
-            time = entry.timestamp
-            group = entry.details.group
-            building = entry.details.building
+            date = entry.timestamp
+            now = datetime.now()
+            if (date < now and (date + timedelta(seconds=60)) > now):
+                group = entry.details.group
+                building = entry.details.building
+                day = entry.details.day
+                lesson = entry.details.lessonNumber
+
             
 
 
