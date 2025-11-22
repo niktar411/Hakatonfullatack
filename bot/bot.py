@@ -1,9 +1,11 @@
 import os
 import asyncio
 import logging
-from handlers import rtr
+from schedule import scheduler
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
+from schedule import check_and_send_notifications
+from handlers import rtr
 
 # ENVIORMENTS
 env_get = os.environ.get
@@ -11,6 +13,10 @@ load_dotenv()
 
 # MAIN
 async def main():
+    # SCHEDULE
+    scheduler.add_job(check_and_send_notifications, 'interval', minutes=1)
+    scheduler.start()
+    # BOT
     BOT_TOKEN = env_get("BOT_TOKEN")
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
