@@ -3,9 +3,10 @@ import os
 import logging
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+import uuid
 
 # Добавил импорт async_sessionmaker
-from sqlalchemy import String, BigInteger
+from sqlalchemy import String, BigInteger, Boolean, DateTime
 from sqlalchemy.ext.asyncio import (
     create_async_engine, 
     AsyncAttrs, 
@@ -13,6 +14,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from datetime import datetime
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -42,14 +44,23 @@ class User(Base):
     __tablename__ = "users"
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str] = mapped_column(String, nullable=True)
-    role: Mapped[str] = mapped_column(String, nullable=False)
+    group_name: Mapped[str] = mapped_column(String, nullable=True)
+
+class Event(Base):
+    __tablename__ = "events"
+    event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name:Mapped[str] = mapped_column(String, nullable=True)
+    teacher: Mapped[str] = mapped_column(String, nullable=True)
+    is_even: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    group_name: Mapped[str] = mapped_column(String, nullable=True)
+    date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    is_notified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
 
 # --- 3. ИНИЦИАЛИЗАЦИЯ ТАБЛИЦ ---
 async def init_db():
     try:
         async with engine.begin() as conn:
-            # ВНИМАНИЕ: drop_all УДАЛИТ ВСЕ ДАННЫЕ! Оставьте только для тестов.
-            # Для продакшена уберите эту строку.
             await conn.run_sync(Base.metadata.drop_all) 
             
             await conn.run_sync(Base.metadata.create_all)
@@ -60,7 +71,6 @@ async def init_db():
 # --- 4. ПОЛУЧЕНИЕ СЕССИИ ---
 @asynccontextmanager
 async def get_session() -> AsyncSession:
-    # Создаем новую сессию из глобальной фабрики
     session = async_session_factory()
     try:
         yield session
