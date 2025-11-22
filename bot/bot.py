@@ -1,11 +1,12 @@
 import os
 import asyncio
 import logging
-from schedule import scheduler
+import apscheduler
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 from schedule import check_and_send_notifications
 from handlers import rtr
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ENVIORMENTS
 env_get = os.environ.get
@@ -14,6 +15,7 @@ load_dotenv()
 # MAIN
 async def main():
     # SCHEDULE
+    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
     scheduler.add_job(check_and_send_notifications, 'interval', minutes=1)
     scheduler.start()
     # BOT
