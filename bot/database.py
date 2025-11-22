@@ -1,9 +1,8 @@
-import asyncio
-import os
-import logging
-from dotenv import load_dotenv
-from contextlib import asynccontextmanager
 import uuid
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from config import DB_URL
 
 # Добавил импорт async_sessionmaker
 from sqlalchemy import String, BigInteger, Boolean, DateTime
@@ -16,15 +15,8 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
 
-load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-# --- 1. ГЛОБАЛЬНАЯ НАСТРОЙКА БД ---
-DB_URL = os.environ.get("DB_URL")
-
-if not DB_URL:
-    logging.error("DB_URL not found in .env")
-    exit(1)
 
 # Создаем движок глобально, чтобы он был виден везде
 engine = create_async_engine(DB_URL, echo=True)
