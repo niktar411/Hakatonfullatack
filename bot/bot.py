@@ -21,14 +21,11 @@ async def main():
     dp.include_router(router=rtr)
 
     # SCHEDULE
-    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-    scheduler.add_job(check_and_send_notifications, trigger='interval', minutes=1, kwargs={'bot': bot})
+    scheduler = AsyncIOScheduler(timezone="Asia/Yekaterinburg")
+    scheduler.add_job(check_and_send_notifications, trigger='interval', seconds=15, kwargs={'bot': bot})
     scheduler.start()
 
     await dp.start_polling(bot)
-
-    
-
 
 if __name__ == "__main__":
     if (env_get("DEBUG") == "true"):

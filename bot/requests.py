@@ -1,7 +1,8 @@
 from sqlalchemy import select
 from database import get_session
 from database import User, Event
-
+from datetime import datetime, timedelta
+import logging
 
 async def set_user(tg_id, tg_username):
     async with get_session() as session:
@@ -22,12 +23,13 @@ async def set_group(tg_id, group):
 async def get_user(tg_id) -> User:
     pass
 
-async def get_users(group_name) -> list[User]:
+async def get_users(group_name="") -> list[User]:
     async with get_session() as session:
-        if group_name == "":
-            users = session.scalars(select(User))
+        if group_name:
+            query = session.scalars(select(User).where(User.group_name == group_name))
         else:
-            users = session.scalars(select(User).where(User.group_name == group_name))
+            users = session.scalars(select(User))
+
         return users
         
 
