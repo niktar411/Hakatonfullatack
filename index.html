@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание пар</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Расписание пар</h1>
+            <button class="btn profile-btn" id="registerBtn">Профиль</button>
+        </header>
+        
+        <div class="controls-header">
+            <div class="controls">
+                <div class="dropdown" id="buildingDropdown">
+                    <button class="btn" id="buildingBtn">Корпус</button>
+                    <div class="dropdown-content">
+                        <a href="#" data-value="a">Корпус А</a>
+                        <a href="#" data-value="y">Корпус У</a>
+                        <a href="#" data-value="g">Корпус Г</a>
+                        <a href="#" data-value="k">Корпус К</a>
+                    </div>
+                </div>
+                
+                <div class="dropdown" id="groupDropdown">
+                    <button class="btn" id="groupBtn">Группа</button>
+                    <div class="dropdown-content">
+                        <!-- Список будет заполняться через JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="week-navigation">
+                <button class="week-btn">←</button>
+                <span id="weekRange">Неделя 12.03 - 18.03</span>
+                <button class="week-btn">→</button>
+            </div>
+        </div>
+        
+        <div class="schedule-container">
+            <table class="schedule">
+                <thead>
+                    <tr>
+                        <th class="time-column"></th>
+                        <th class="day-header">Понедельник</th>
+                        <th class="day-header">Вторник</th>
+                        <th class="day-header">Среда</th>
+                        <th class="day-header">Четверг</th>
+                        <th class="day-header">Пятница</th>
+                        <th class="day-header">Суббота</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <!-- Расписание будет загружено через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <h2>Настройки профиля</h2>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label>Тип пользователя:</label>
+                    <div class="role-selector">
+                        <input type="radio" id="student" name="role" value="student" checked>
+                        <label for="student">Студент</label>
+                        <input type="radio" id="admin" name="role" value="admin">
+                        <label for="admin">Администратор</label>
+                    </div>
+                </div>
+                
+                <div id="studentFields">
+                    <div class="form-group">
+                        <label for="building">Корпус:</label>
+                        <select id="building" name="building">
+                            <option value="a">Корпус А</option>
+                            <option value="y">Корпус У</option>
+                            <option value="g">Корпус Г</option>
+                            <option value="k">Корпус К</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="group">Группа:</label>
+                        <select id="group" name="group">
+                            <!-- Группы будут заполнены динамически -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="adminFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="adminPassword">Пароль администратора:</label>
+                        <input type="password" id="adminPassword" name="adminPassword" placeholder="Введите пароль">
+                    </div>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn cancel-btn" id="cancelBtn">Отмена</button>
+                    <button type="submit" class="btn submit-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления/редактирования пары -->
+    <div id="lessonModal" class="modal">
+        <div class="modal-content">
+            <h2 id="lessonModalTitle">Добавить пару</h2>
+            <div class="lesson-info-header">
+                <div class="lesson-info-item">
+                    <strong>День:</strong> <span id="lessonDayInfo">Понедельник</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Дата:</strong> <span id="lessonDateInfo">12.03.2024</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Пара:</strong> <span id="lessonNumberInfo">1</span>
+                </div>
+                <div class="lesson-info-item">
+                    <strong>Время:</strong> <span id="lessonTimeInfo">8:30 - 9:50</span>
+                </div>
+            </div>
+            <form id="lessonForm">
+                <div class="form-group">
+                    <label for="teacherSearch">Поиск преподавателя:</label>
+                    <input type="text" id="teacherSearch" placeholder="Введите ФИО преподавателя">
+                    <div id="teacherResults" class="search-results"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">Предмет:</label>
+                    <select id="subject" name="subject">
+                        <option value="">Выберите предмет</option>
+                        <option value="Математика">Математика</option>
+                        <option value="Физика">Физика</option>
+                        <option value="Программирование">Программирование</option>
+                        <option value="Базы данных">Базы данных</option>
+                        <option value="Английский язык">Английский язык</option>
+                        <option value="История">История</option>
+                        <option value="Физкультура">Физкультура</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="room">Аудитория:</label>
+                    <input type="text" id="room" name="room" placeholder="Номер аудитории">
+                </div>
+                <div class="form-group">
+                    <label for="lessonType">Тип занятия:</label>
+                    <select id="lessonType" name="lessonType">
+                        <option value="lecture">Лекция</option>
+                        <option value="practice">Практическая работа</option>
+                        <option value="lab">Лабораторная работа</option>
+                    </select>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn cancel-btn" id="cancelLessonBtn">Отмена</button>
+                    <button type="submit" class="btn submit-btn">Сохранить</button>
+                    <button type="button" class="btn delete-btn" id="deleteLessonBtn" style="display: none;">Удалить пару</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+    <script src="register.js"></script>
+</body>
+</html>
