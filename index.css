@@ -609,3 +609,115 @@ header::after {
 .form-group input:valid {
     border-color: #28a745;
 }
+
+/* Добавьте в конец файла index.css */
+
+.cancelled-lesson {
+    background-color: #f8f9fa;
+    opacity: 0.7;
+}
+
+.cancelled-lesson:hover {
+    background-color: #f8f9fa;
+}
+
+.cancellation-info {
+    background-color: #ffe6e6;
+    padding: 3px;
+    border-radius: 3px;
+    border-left: 3px solid #dc3545;
+}
+
+/* Стили для поля ввода причины отмены */
+#cancellationReasonField {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+/* Убираем фиксированную высоту для ячеек с занятиями */
+.day-cell {
+    vertical-align: top;
+    height: auto; /* Заменяем фиксированную высоту на автоматическую */
+    min-height: 100px; /* Оставляем минимальную высоту */
+    padding: 10px 8px; /* Увеличиваем отступы для лучшего вида */
+}
+
+/* Увеличиваем отступы и шрифт для информации об отмене */
+.cancellation-info {
+    background-color: #ffe6e6;
+    padding: 8px;
+    border-radius: 5px;
+    border-left: 4px solid #dc3545;
+    margin-top: 5px;
+    font-size: 0.9em;
+}
+
+.cancellation-info strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+    color: #dc3545;
+}
+
+.cancellation-reason {
+    font-size: 0.85em;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+/* Увеличиваем минимальную высоту строки для лучшего отображения */
+.schedule tr {
+    min-height: 100px;
+}
+
+/* Убедимся, что ячейки растягиваются по содержимому */
+.schedule td {
+    height: auto;
+    min-height: 100px;
+}
+
+/* Для отмененных занятий делаем более заметное оформление */
+.cancelled-lesson .room-number {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.cancelled-lesson .subject-cell,
+.cancelled-lesson .teacher-cell,
+.cancelled-lesson .lesson-type {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+/* Улучшаем отображение для мобильных устройств */
+@media (max-width: 1199px) {
+    .day-cell {
+        min-height: 90px;
+        padding: 8px 6px;
+    }
+    
+    .cancellation-info {
+        padding: 6px;
+        font-size: 0.85em;
+    }
+    
+    .cancellation-info strong {
+        font-size: 0.9em;
+    }
+    
+    .cancellation-reason {
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 768px) {
+    .day-cell {
+        min-height: 80px;
+        padding: 6px 4px;
+    }
+    
+    .cancellation-info {
+        padding: 4px;
+        font-size: 0.8em;
+    }
+}

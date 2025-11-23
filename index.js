@@ -128,21 +128,46 @@ function saveLesson(day, lessonNumber, teacher, subject, room, lessonType) {
 }
 
 // Функция для удаления пары
-function removeLesson(day, lessonNumber) {
+function removeLesson(day, lessonNumber, cancellationReason = '') {
     if (customScheduleData[currentGroup] && customScheduleData[currentGroup][currentBuilding]) {
         const dayData = customScheduleData[currentGroup][currentBuilding].find(d => d.day === day);
         
         if (dayData) {
-            dayData.lessons = dayData.lessons.filter(l => l.number !== lessonNumber);
-            
-            // Если в дне не осталось уроков, удаляем день
-            if (dayData.lessons.length === 0) {
-                customScheduleData[currentGroup][currentBuilding] = customScheduleData[currentGroup][currentBuilding].filter(d => d.day !== day);
+            // Если указана причина - помечаем как отмененную
+            if (cancellationReason) {
+                const cancelledLesson = {
+                    number: lessonNumber,
+                    cancelled: true,
+                    cancellationReason: cancellationReason,
+                    cancellationDate: new Date().toISOString(),
+                    originalData: getLessonForEditing(day, lessonNumber) // сохраняем исходные данные
+                };
+                
+                const lessonIndex = dayData.lessons.findIndex(l => l.number === lessonNumber);
+                
+                if (lessonIndex !== -1) {
+                    // Обновляем существующий урок
+                    dayData.lessons[lessonIndex] = { ...dayData.lessons[lessonIndex], ...cancelledLesson };
+                } else {
+                    // Добавляем запись об отмене
+                    dayData.lessons.push(cancelledLesson);
+                }
+                
+                showNotification('Пара успешно отменена', 'success');
+            } else {
+                // Полное удаление - убираем урок из расписания
+                dayData.lessons = dayData.lessons.filter(l => l.number !== lessonNumber);
+                
+                // Если в дне не осталось уроков, удаляем день
+                if (dayData.lessons.length === 0) {
+                    customScheduleData[currentGroup][currentBuilding] = 
+                        customScheduleData[currentGroup][currentBuilding].filter(d => d.day !== day);
+                }
+                
+                showNotification('Пара полностью удалена', 'success');
             }
             
-            // Сохраняем изменения
             saveCustomSchedule();
-            showNotification('Пара успешно удалена', 'success');
         }
     }
 }
@@ -181,30 +206,24 @@ function renderSchedule(scheduleData) {
     const scheduleBody = document.getElementById('scheduleBody');
     scheduleBody.innerHTML = '';
 
-    // Получаем данные для текущей группы и корпуса
     const groupData = scheduleData[currentGroup];
     const buildingSchedule = groupData ? groupData[currentBuilding] : null;
 
-    // Создаем строки для каждого урока (1-8 уроки)
     for (let lessonNum = 1; lessonNum <= 8; lessonNum++) {
         const row = document.createElement('tr');
         
-        // Добавляем ячейку с временем урока
         const timeCell = document.createElement('td');
         timeCell.className = 'time-column';
-        
         timeCell.innerHTML = `
             <span class="lesson-number">${lessonNum} пара</span>
             <span class="time-cell">${lessonTimes[lessonNum]}</span>
         `;
         row.appendChild(timeCell);
         
-        // Добавляем ячейки для каждого дня недели
         daysOfWeek.forEach(day => {
             const dayCell = document.createElement('td');
             dayCell.className = 'day-cell lesson-cell';
             
-            // Находим урок для этого дня и номера пары
             let lesson = null;
             if (buildingSchedule) {
                 const daySchedule = buildingSchedule.find(d => d.day === day);
@@ -214,38 +233,64 @@ function renderSchedule(scheduleData) {
             }
             
             if (lesson) {
-                const lessonType = lesson.type || 'lecture';
-                const typeText = lessonType === 'practice' ? 'Практическая работа' : 
-                               lessonType === 'lab' ? 'Лабораторная работа' : 'Лекция';
-                
-                dayCell.innerHTML = `
-                    <div class="lesson-content">
-                        <div class="room-number">${lesson.room}</div>
-                        <div class="lesson-details">
-                            <div class="subject-cell">${lesson.subject}</div>
-                            <div class="teacher-cell">${lesson.teacher}</div>
-                            <div class="lesson-type">${typeText}</div>
+                // Проверяем, отменена ли пара
+                if (lesson.cancelled) {
+                    dayCell.classList.add('cancelled-lesson');
+                    dayCell.innerHTML = `
+                        <div class="lesson-content">
+                            <div class="room-number cancelled-room">${lesson.room || '-'}</div>
+                            <div class="lesson-details">
+                                <div class="subject-cell cancelled-subject">${lesson.subject || 'Пара'}</div>
+                                <div class="teacher-cell cancelled-teacher">${lesson.teacher || ''}</div>
+                                <div class="lesson-type cancelled-type">${getLessonTypeText(lesson.type)}</div>
+                                <div class="cancellation-info">
+                                    <strong>ОТМЕНЕНО</strong>
+                                    <div class="cancellation-reason">${lesson.cancellationReason || 'Причина не указана'}</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    ${isAdminMode() ? `
-                        <div class="admin-controls">
-                            <button class="edit-btn" data-day="${day}" data-lesson="${lessonNum}">✏️</button>
-                            <button class="remove-btn" data-day="${day}" data-lesson="${lessonNum}">🗑️</button>
+                        ${isAdminMode() ? `
+                            <div class="admin-controls">
+                                <button class="remove-btn" data-day="${day}" data-lesson="${lessonNum}" title="Полностью удалить">🗑️</button>
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    // Обычная пара
+                    const lessonType = lesson.type || 'lecture';
+                    const typeText = getLessonTypeText(lessonType);
+                    
+                    dayCell.innerHTML = `
+                        <div class="lesson-content">
+                            <div class="room-number">${lesson.room}</div>
+                            <div class="lesson-details">
+                                <div class="subject-cell">${lesson.subject}</div>
+                                <div class="teacher-cell">${lesson.teacher}</div>
+                                <div class="lesson-type">${typeText}</div>
+                            </div>
                         </div>
-                    ` : ''}
-                `;
-                
-                // Добавляем класс для текущего дня
-                if (isCurrentDay(day)) {
-                    dayCell.classList.add('current-day');
+                        ${isAdminMode() ? `
+                            <div class="admin-controls">
+                                <button class="edit-btn" data-day="${day}" data-lesson="${lessonNum}" title="Редактировать">✏️</button>
+                                <button class="remove-btn" data-day="${day}" data-lesson="${lessonNum}" title="Отменить пару">🗑️</button>
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    if (isCurrentDay(day)) {
+                        dayCell.classList.add('current-day');
+                    }
                 }
             } else {
+                // ИСПРАВЛЕННАЯ ЧАСТЬ: Отображение пустой ячейки с кнопкой добавления
                 dayCell.innerHTML = `
                     <div class="no-lessons">нет занятий</div>
                     ${isAdminMode() ? `
-                        <button class="add-lesson-btn" data-day="${day}" data-lesson="${lessonNum}">
-                            + Добавить пару
-                        </button>
+                        <div style="text-align: center; margin-top: 5px;">
+                            <button class="add-lesson-btn" data-day="${day}" data-lesson="${lessonNum}">
+                                + Добавить пару
+                            </button>
+                        </div>
                     ` : ''}
                 `;
                 dayCell.classList.add('empty-cell');
@@ -257,9 +302,17 @@ function renderSchedule(scheduleData) {
         scheduleBody.appendChild(row);
     }
 
-    // Добавляем обработчики событий для административного режима
     if (isAdminMode()) {
         addAdminEventListeners();
+    }
+}
+
+// Функция для получения текста типа занятия
+function getLessonTypeText(lessonType) {
+    switch (lessonType) {
+        case 'practice': return 'Практическая работа';
+        case 'lab': return 'Лабораторная работа';
+        default: return 'Лекция';
     }
 }
 
@@ -290,7 +343,7 @@ function addAdminEventListeners() {
             e.stopPropagation();
             const day = this.getAttribute('data-day');
             const lesson = parseInt(this.getAttribute('data-lesson'));
-            removeLessonWithConfirmation(day, lesson);
+            handleRemoveButtonClick(day, lesson);
         });
     });
 }
@@ -473,13 +526,163 @@ function showConfirmation(message, callback) {
     });
 }
 
-// Обновленная функция удаления пары с подтверждением
+// Обновленная функция удаления пары с подтверждением и причиной
 function removeLessonWithConfirmation(day, lessonNumber) {
-    showConfirmation('Вы уверены, что хотите удалить эту пару?', function() {
-        removeLesson(day, lessonNumber);
+    showCancellationDialog(day, lessonNumber);
+}
+
+// Новая функция для показа диалога отмены с указанием причины
+function showCancellationDialog(day, lessonNumber) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        max-width: 400px;
+        width: 90%;
+    `;
+    
+    modal.innerHTML = `
+        <h3 style="margin-bottom: 15px;">Отмена пары</h3>
+        <p style="margin-bottom: 10px;">Вы уверены, что хотите отменить эту пару?</p>
+        <div class="form-group">
+            <label for="cancellationReasonInput" style="display: block; margin-bottom: 8px; font-weight: 600;">Причина отмены:</label>
+            <input type="text" id="cancellationReasonInput" placeholder="Укажите причину отмены" 
+                   style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn cancel-btn" style="flex: 1;">Отмена</button>
+            <button class="btn delete-btn" style="flex: 1;">Отменить пару</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Фокусируемся на поле ввода
+    setTimeout(() => {
+        const reasonInput = modal.querySelector('#cancellationReasonInput');
+        if (reasonInput) reasonInput.focus();
+    }, 100);
+    
+    // Обработчики кнопок
+    modal.querySelector('.cancel-btn').addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+    
+    modal.querySelector('.delete-btn').addEventListener('click', function() {
+        const reasonInput = modal.querySelector('#cancellationReasonInput');
+        const cancellationReason = reasonInput.value.trim();
+        
+        if (!cancellationReason) {
+            showNotification('Пожалуйста, укажите причину отмены', 'error');
+            return;
+        }
+        
+        document.body.removeChild(overlay);
+        removeLesson(day, lessonNumber, cancellationReason);
         loadScheduleFromJSON();
     });
+    
+    // Закрытие по клавише Esc
+    overlay.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.body.removeChild(overlay);
+        }
+    });
 }
+
+// Функция для отмены пары с указанием причины
+function cancelLessonWithReason(day, lessonNumber) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        max-width: 400px;
+        width: 90%;
+    `;
+    
+    modal.innerHTML = `
+        <h3 style="margin-bottom: 15px;">Отмена пары</h3>
+        <p style="margin-bottom: 10px;">Вы собираетесь отменить эту пару. Она останется в расписании с пометкой "Отменено".</p>
+        <div class="form-group">
+            <label for="cancellationReasonInput" style="display: block; margin-bottom: 8px; font-weight: 600;">Причина отмены:</label>
+            <input type="text" id="cancellationReasonInput" placeholder="Укажите причину отмены" 
+                   style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn cancel-btn" style="flex: 1;">Отмена</button>
+            <button class="btn delete-btn" style="flex: 1;">Отменить пару</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Фокусируемся на поле ввода
+    setTimeout(() => {
+        const reasonInput = modal.querySelector('#cancellationReasonInput');
+        if (reasonInput) reasonInput.focus();
+    }, 100);
+    
+    // Обработчики кнопок
+    modal.querySelector('.cancel-btn').addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+    
+    modal.querySelector('.delete-btn').addEventListener('click', function() {
+        const reasonInput = modal.querySelector('#cancellationReasonInput');
+        const cancellationReason = reasonInput.value.trim();
+        
+        if (!cancellationReason) {
+            showNotification('Пожалуйста, укажите причину отмены', 'error');
+            return;
+        }
+        
+        document.body.removeChild(overlay);
+        removeLesson(day, lessonNumber, cancellationReason);
+        loadScheduleFromJSON();
+    });
+    
+    // Закрытие по клавише Esc
+    overlay.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.body.removeChild(overlay);
+        }
+    });
+}
+
 
 // Инициализация функционала администратора
 function initializeAdminFeatures() {
@@ -541,6 +744,26 @@ function initializeAdminFeatures() {
         lessonModal.style.display = 'none';
         loadScheduleFromJSON();
     });
+}
+
+// Функция для полного удаления пары
+function removeLessonCompletely(day, lessonNumber) {
+    showConfirmation('Вы уверены, что хотите полностью удалить эту пару? Ячейка расписания будет освобождена.', function() {
+        removeLesson(day, lessonNumber); // Без причины - полное удаление
+        loadScheduleFromJSON();
+    });
+}
+
+function handleRemoveButtonClick(day, lessonNumber) {
+    const lesson = getLessonForEditing(day, lessonNumber);
+    
+    if (lesson && lesson.cancelled) {
+        // Если пара уже отменена - предлагаем полное удаление
+        removeLessonCompletely(day, lessonNumber);
+    } else {
+        // Если пара активна - предлагаем отмену с причиной
+        cancelLessonWithReason(day, lessonNumber);
+    }
 }
 
 // Функция для проверки текущего дня
