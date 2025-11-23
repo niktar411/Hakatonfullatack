@@ -20,14 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Открытие модального окна
     registerBtn.addEventListener('click', function() {
-        registrationModal.style.display = 'block';
-    });
-
-    // Закрытие модального окна при клике вне его
-    window.addEventListener('click', function(event) {
-        if (event.target === registrationModal) {
-            registrationModal.style.display = 'none';
+        const userRole = localStorage.getItem('userRole');
+        
+        if (userRole === 'student') {
+            // Заполняем поля сохраненными данными
+            document.getElementById('studentName').value = localStorage.getItem('studentName') || '';
+            document.getElementById('studentEmail').value = localStorage.getItem('studentEmail') || '';
         }
+        
+        registrationModal.style.display = 'block';
     });
 
     // Закрытие модального окна при клике на отмену
@@ -109,11 +110,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (role === 'student') {
             const building = formData.get('building');
             const group = formData.get('group');
+            const studentName = formData.get('studentName');
+            const studentEmail = formData.get('studentEmail');
+            
+            // Валидация обязательных полей
+            if (!studentName || !studentEmail) {
+                showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            // Простая валидация email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(studentEmail)) {
+                showNotification('Пожалуйста, введите корректный email адрес', 'error');
+                return;
+            }
             
             // Сохраняем данные в localStorage
             localStorage.setItem('userRole', 'student');
             localStorage.setItem('userBuilding', building);
             localStorage.setItem('userGroup', group);
+            localStorage.setItem('studentName', studentName);
+            localStorage.setItem('studentEmail', studentEmail);
             
         } else if (role === 'admin') {
             const password = formData.get('adminPassword');
@@ -141,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const userRole = localStorage.getItem('userRole');
         
         if (userRole === 'admin') {
-            // Меняем внешний вид кнопки для админа
             registerBtn.textContent = 'Администратор';
             registerBtn.style.backgroundColor = '#dc3545';
             
@@ -149,22 +166,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof loadScheduleFromJSON === 'function') {
                 loadScheduleFromJSON();
             }
-            showNotification('Режим администратора активирован', 'success');
-        } else if (userRole === 'student') {
-            // Обновляем выбранные значения в основном интерфейсе
-            const userBuilding = localStorage.getItem('userBuilding');
-            const userGroup = localStorage.getItem('userGroup');
             
-            // Обновляем кнопку профиля
-            registerBtn.textContent = 'Студент';
+            // Показываем приветствие через 0.5 секунды
+            setTimeout(() => {
+                showNotification('Режим администратора активирован', 'success');
+            }, 500);
+            
+        } else if (userRole === 'student') {
+            const studentName = localStorage.getItem('studentName');
+            const displayName = studentName ? studentName.split(' ')[0] : 'Студент';
+            
+            registerBtn.textContent = displayName;
             registerBtn.style.backgroundColor = '#28a745';
             
             // Обновляем основные элементы управления расписанием
-            updateScheduleControls(userBuilding, userGroup);
+            updateScheduleControls(
+                localStorage.getItem('userBuilding'), 
+                localStorage.getItem('userGroup')
+            );
             
             // Перезагружаем расписание
             if (typeof loadScheduleFromJSON === 'function') {
                 loadScheduleFromJSON();
+            }
+            
+            // Показываем приветствие через 3 секунды
+            if (studentName) {
+                setTimeout(() => {
+                    showNotification(`Добро пожаловать, ${studentName}!`, 'success');
+                }, 3000);
             }
         }
     }
