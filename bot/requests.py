@@ -1,16 +1,17 @@
 import logging
 import aiohttp
-from sqlalchemy import select
-from database import get_session
-from database import User, Event
 from datetime import datetime, timedelta
+from typing import Optional, Dict, List
+
+from sqlalchemy import select
+
 from config import BASE_URL
+from database import get_session, User, Event
 from deserialize import DaySchedule, Journal, parse_journal, parse_schedule
 
 
 async def set_user(tg_id: int, tg_username: str) -> bool:
     async with get_session() as session:
-        # ИСПРАВЛЕНО: Используем execute + scalar_one_or_none (или просто scalar)
         result = await session.execute(select(User).where(User.user_id == tg_id))
         user = result.scalar_one_or_none()
         
@@ -47,7 +48,7 @@ async def get_users(group_name: str = "") -> list[User]:
             stmt = select(User)
 
         result = await session.execute(stmt)
-        users = result.scalars().all() # .all() превращает результат в список
+        users = result.scalars().all()
         return list(users)
 
 
@@ -59,7 +60,6 @@ async def get_upcoming_events() -> list[Event]:
         
         logging.info(f"Checking events: {target_time_start} -> {target_time_end}")
         
-        # ИСПРАВЛЕНО: await session.execute(...) и .all()
         stmt = select(Event).where(
             Event.date >= target_time_start,
             Event.date < target_time_end,
@@ -68,18 +68,6 @@ async def get_upcoming_events() -> list[Event]:
         result = await session.execute(stmt)
         events = result.scalars().all()
         return list(events)
-
-
-# // API для получения расписания
-# app.get('/api/schedule', async (req, res) => {
-#     try {
-#         const data = await fs.readFile('schedule.json', 'utf8');
-#         res.json(JSON.parse(data));
-#     } catch (error) {
-#         res.status(500).json({ error: 'Ошибка загрузки расписания' });
-#     }
-# });
-
 
 
 async def get_schedule_from_api() -> Optional[Dict]:
@@ -96,7 +84,6 @@ async def get_schedule_from_api() -> Optional[Dict]:
         except Exception as e:
             logging.info(f"Не удалось подключиться: {e}")
             return None
-
 
 
 async def get_journal_from_api() -> Optional[Journal]:

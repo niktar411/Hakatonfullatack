@@ -1,5 +1,6 @@
-
-
+from datetime import datetime
+from typing import List, Dict, Optional
+from pydantic import BaseModel, TypeAdapter
 
 class LessonInnerData(BaseModel):
     number: int
@@ -13,7 +14,9 @@ class LessonDetails(BaseModel):
     building: str
     day: str
     lessonNumber: int
-    data: LessonInnerData
+    data: Optional[LessonInnerData] = None
+    oldData: Optional[LessonInnerData] = None
+    newData: Optional[LessonInnerData] = None
 
 class LogEntry(BaseModel):
     id: str
